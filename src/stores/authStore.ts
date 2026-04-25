@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin },
     })
     return { error: error as Error | null }
   },
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithGoogle: async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: import.meta.env.VITE_APP_URL || window.location.origin },
     })
     return { error: error as Error | null }
   },
