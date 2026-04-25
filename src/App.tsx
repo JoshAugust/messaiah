@@ -21,7 +21,7 @@ export function App() {
   }, [initialize])
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/messaiah">
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
