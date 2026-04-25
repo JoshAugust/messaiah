@@ -100,26 +100,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
-    // Get initial session
-    const { data: { session } } = await supabase.auth.getSession()
-    set({
-      session,
-      user: session?.user ?? null,
-      loading: false,
-      initialized: true,
-    })
+    // Check if this is an OAuth callback (code in URL params or tokens in hash)
+    const params = new URLSearchParams(window.location.search)
+    const hash = window.location.hash
+    const isAuthCallback = params.has('code') || hash.includes('access_token')
 
-    if (session?.user) {
-      get().fetchProfile()
-    }
-
-    // Listen for auth changes
+    // Listen for auth changes FIRST so we catch the callback exchange
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         set({
           session,
           user: session?.user ?? null,
           loading: false,
+          initialized: true,
         })
         if (session?.user) {
           get().fetchProfile()
@@ -128,6 +121,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     )
+
+    // Get initial session
+    const { data: { session } } = await supabase.auth.getSession()
+
+    // Only mark initialized immediately if NOT an auth callback
+    // (if it IS a callback, onAuthStateChange will fire and set initialized)
+    if (!isAuthCallback || session) {
+      set({
+        session,
+        user: session?.user ?? null,
+        loading: false,
+        initialized: true,
+      })
+
+      if (session?.user) {
+        get().fetchProfile()
+      }
+    }
 
     // Return cleanup function
     return () => subscription.unsubscribe()
